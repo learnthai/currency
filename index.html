@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>換匯計算機</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="換匯計算機">
+<meta name="theme-color" content="#4E7A92">
+<link rel="apple-touch-icon" href="https://duk.tw/sdiLb7.png">
+<link rel="manifest" id="pwaManifest">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Noto+Serif+TC:wght@300;400;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#EEF3F7;--white:#FFF;--brown:#4E7A92;--green:#6A9FAD;
+  --text:#1A2730;--muted:#7A9BAA;--border:#C4D8E4;--tag-bg:#DCEBf2;
+}
+body{background:var(--bg);color:var(--text);font-family:'Noto Serif TC',serif;min-height:100vh;padding:0 0 60px}
+
+header{background:var(--white);border-bottom:1px solid var(--border);padding:28px 24px 22px;text-align:center}
+header h1{font-family:'DM Serif Display',serif;font-size:1.9rem;font-weight:400;letter-spacing:.12em}
+header p{font-size:.75rem;color:var(--muted);margin-top:4px;letter-spacing:.08em;font-weight:300}
+
+.container{max-width:520px;margin:0 auto;padding:0 20px}
+
+/* Tabs row */
+.tabs-row{display:flex;align-items:center;gap:8px;padding:20px 0 12px}
+.currency-tabs{display:flex;flex-wrap:wrap;gap:8px;flex:1}
+.currency-tab{padding:6px 14px;border:1px solid var(--border);border-radius:20px;background:var(--white);color:var(--muted);font-family:'Noto Serif TC',serif;font-size:.78rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px}
+.currency-tab:hover{border-color:var(--brown);color:var(--brown)}
+.currency-tab.active{background:var(--brown);border-color:var(--brown);color:#fff}
+
+.history-icon-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--white);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;box-shadow:0 2px 6px rgba(0,0,0,.08);transition:all .18s;flex-shrink:0}
+.history-icon-btn:hover{border-color:var(--brown);color:var(--brown)}
+.history-badge{position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:var(--brown);color:#fff;border-radius:50%;font-size:.6rem;display:flex;align-items:center;justify-content:center;font-weight:600}
+
+/* Card */
+.card{background:var(--white);border:1px solid var(--border);border-radius:2px;padding:24px 20px;margin-bottom:16px}
+.card-label{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+.card-label span{font-size:.62rem;color:var(--border);text-transform:none;letter-spacing:0}
+
+.input-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.currency-badge-wrap{min-width:64px;cursor:pointer;border-radius:4px}
+.currency-badge{text-align:center;padding:10px 8px;background:var(--tag-bg);border-radius:4px;font-size:.8rem;font-weight:600;color:var(--brown);letter-spacing:.06em;box-shadow:0 3px 6px rgba(0,0,0,.10),0 1px 2px rgba(0,0,0,.07);transition:box-shadow .15s,transform .15s}
+.currency-badge-wrap:hover .currency-badge{box-shadow:0 6px 14px rgba(0,0,0,.14),0 2px 4px rgba(0,0,0,.08);transform:translateY(-2px)}
+.currency-badge-wrap:active .currency-badge{box-shadow:0 1px 3px rgba(0,0,0,.10);transform:translateY(1px)}
+.currency-name{font-size:.65rem;color:var(--muted);margin-top:4px;font-weight:300;text-align:center}
+.swap-hint{font-size:.58rem;color:var(--border);text-align:center;margin-top:1px}
+
+.amount-input{flex:1;border:none;border-bottom:1.5px solid var(--border);padding:10px 4px;font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:300;color:var(--text);background:transparent;outline:none;transition:border-color .2s;text-align:right;min-width:0}
+.amount-input:focus{border-bottom-color:var(--brown)}
+.amount-input::placeholder{color:var(--border)}
+
+.quick-amounts{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding-left:76px}
+.qa-btn{padding:4px 10px;border:1px solid var(--border);border-radius:12px;background:transparent;color:var(--muted);font-size:.7rem;cursor:pointer;transition:all .15s;font-family:'Noto Serif TC',serif}
+.qa-btn:hover{border-color:var(--brown);color:var(--brown);background:var(--tag-bg)}
+.qa-btn.adding{border-color:var(--green);color:var(--green);background:#e8f4f6}
+
+.divider{display:flex;align-items:center;justify-content:center;margin:4px 0 14px}
+.swap-btn{width:36px;height:36px;border-radius:50%;background:var(--white);border:1px solid var(--border);box-shadow:0 3px 8px rgba(0,0,0,.12),0 1px 3px rgba(0,0,0,.08);color:var(--brown);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .18s}
+.swap-btn:hover{box-shadow:0 5px 14px rgba(0,0,0,.18);transform:translateY(-1px)}
+.swap-btn:active{transform:translateY(1px);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+
+.rate-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px}
+.rate-info{font-size:.72rem;color:var(--muted);letter-spacing:.04em}
+.trend-badge{font-size:.68rem;padding:2px 8px;border-radius:10px;font-weight:600}
+.trend-up{background:#e6f4ea;color:#2e7d4f}
+.trend-down{background:#fdecea;color:#c0392b}
+.trend-flat{background:var(--tag-bg);color:var(--muted)}
+
+/* ── Feature Tabs ── */
+.feat-tabs{display:flex;gap:0;margin-top:18px;padding-top:16px;border-top:1px dashed var(--border)}
+.feat-tab{flex:1;text-align:center;font-size:.72rem;padding:6px 4px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all .18s;font-family:'Noto Serif TC',serif;letter-spacing:.02em}
+.feat-tab:hover{color:var(--brown)}
+.feat-tab.active{color:var(--brown);border-bottom:2px solid var(--brown);font-weight:600}
+.feat-pane{display:none;padding-top:14px}
+.feat-pane.active{display:block}
+
+/* Calculator */
+.calc-display{background:var(--bg);border:1px solid var(--border);border-radius:2px;padding:10px 14px;margin-bottom:10px;text-align:right;min-height:48px}
+.calc-expr{font-size:.68rem;color:var(--muted);min-height:14px;font-family:'Cormorant Garamond',serif}
+.calc-val{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:var(--text);line-height:1.1}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.calc-btn{
+  width:100%;aspect-ratio:1;border:1px solid var(--border);border-radius:50%;
+  background:var(--white);color:var(--text);font-family:'Cormorant Garamond',serif;
+  font-size:1.05rem;cursor:pointer;
+  box-shadow:0 2px 5px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+  transition:all .12s;user-select:none;
+  display:flex;align-items:center;justify-content:center;padding:0;
+}
+.calc-btn:hover{box-shadow:0 4px 10px rgba(0,0,0,.13);transform:translateY(-1px)}
+.calc-btn:active{transform:translateY(1px);box-shadow:0 1px 3px rgba(0,0,0,.08);background:var(--bg)}
+.calc-btn.op{color:var(--brown);font-size:.95rem}
+.calc-btn.eq{background:var(--brown);color:#fff;border-color:var(--brown);box-shadow:0 2px 8px rgba(78,122,146,.35)}
+.calc-btn.eq:hover{background:#3d6578;box-shadow:0 4px 14px rgba(78,122,146,.45)}
+.calc-btn.eq:active{transform:translateY(1px);box-shadow:0 1px 4px rgba(78,122,146,.25)}
+.calc-btn.del{color:#c0392b;font-size:.9rem}
+.calc-btn.clear{color:var(--muted);font-size:.75rem;font-family:'Noto Serif TC',serif}
+.calc-btn.use{background:var(--green);color:#fff;border-color:var(--green);font-family:'Noto Serif TC',serif;font-size:.68rem;box-shadow:0 2px 8px rgba(106,159,173,.35)}
+.calc-btn.use:hover{background:#5a8f9d;transform:translateY(-1px)}
+
+/* Estimate pane */
+.est-subtitle{font-size:.68rem;color:var(--muted);margin-bottom:14px}
+.estimate-input-wrap{display:flex;align-items:center;margin-bottom:14px;border-bottom:1.5px solid var(--border);padding-bottom:10px}
+.est-num-input{flex:1;border:none;padding:6px 4px;font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:300;color:var(--text);background:transparent;outline:none;text-align:right;min-width:0}
+.est-num-input::placeholder{color:var(--border)}
+.est-suffix{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:300;color:var(--muted);white-space:nowrap;padding-left:2px}
+.est-code{font-size:.78rem;font-weight:600;color:var(--brown);padding-left:8px;white-space:nowrap}
+.estimate-result-row{display:flex;justify-content:space-between;align-items:baseline}
+.estimate-result-label{font-size:.78rem;color:var(--muted)}
+.estimate-result-value{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--text)}
+.estimate-note{font-size:.68rem;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);line-height:1.7;white-space:pre-line}
+
+/* Map pane */
+.map-hint-box{background:var(--bg);border:1px solid var(--border);border-radius:2px;padding:12px 14px;margin-bottom:12px}
+.map-hint-title{font-size:.7rem;color:var(--brown);font-weight:600;margin-bottom:6px}
+.map-hint-text{font-size:.7rem;color:var(--muted);line-height:1.7}
+.map-tips{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.map-tip{font-size:.68rem;color:var(--muted);display:flex;gap:6px;align-items:flex-start}
+.map-tip-icon{flex-shrink:0}
+.map-btn{width:100%;padding:12px;border:1px solid var(--brown);border-radius:2px;background:transparent;color:var(--brown);font-family:'Noto Serif TC',serif;font-size:.82rem;letter-spacing:.06em;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.map-btn:hover{background:var(--brown);color:#fff}
+
+/* History overlay */
+.history-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:100;align-items:flex-end;justify-content:center}
+.history-overlay.open{display:flex}
+.history-sheet{background:var(--white);width:100%;max-width:520px;border-radius:8px 8px 0 0;padding:24px 20px 40px;max-height:75vh;overflow-y:auto}
+.history-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.history-label{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.history-clear{font-size:.68rem;color:var(--border);cursor:pointer;background:none;border:none;font-family:'Noto Serif TC',serif;transition:color .15s}
+.history-clear:hover{color:#c0392b}
+.history-empty{font-size:.78rem;color:var(--border);text-align:center;padding:24px 0}
+.history-item{display:flex;justify-content:space-between;align-items:center;padding:12px 8px;border-bottom:1px solid var(--border);cursor:pointer;transition:all .15s;border-radius:2px}
+.history-item:last-child{border-bottom:none}
+.history-item:hover{background:var(--bg);padding-left:14px}
+.history-left{display:flex;flex-direction:column;gap:2px}
+.history-pair{font-size:.72rem;color:var(--muted)}
+.history-from{font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--text)}
+.history-right{text-align:right}
+.history-to{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--brown)}
+.history-time{font-size:.65rem;color:var(--border);margin-top:2px}
+
+/* Picker */
+.picker-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:100;align-items:flex-end;justify-content:center}
+.picker-overlay.open{display:flex}
+.picker-sheet{background:var(--white);width:100%;max-width:520px;border-radius:8px 8px 0 0;padding:24px 20px 40px;max-height:70vh;overflow-y:auto}
+.picker-title{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
+.picker-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.picker-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--border);border-radius:2px;cursor:pointer;transition:all .15s;color:var(--text)}
+.picker-item:hover{border-color:var(--brown);background:var(--bg)}
+.picker-item.active{border-color:var(--brown);background:var(--tag-bg);font-weight:600;color:var(--brown)}
+.pi-flag{font-size:1.2rem}
+.pi-code{font-weight:600;font-size:.8rem}
+.pi-name{font-size:.68rem;color:var(--muted);margin-top:1px}
+
+.update-info{text-align:center;font-size:.68rem;color:var(--muted);padding-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <h1>CURRENCY</h1>
+  <p>即時換匯 · 口袋計算機</p>
+</header>
+
+<div class="container">
+  <div class="tabs-row">
+    <div class="currency-tabs" id="currencyTabs"></div>
+    <div style="position:relative;flex-shrink:0">
+      <button class="history-icon-btn" id="historyIconBtn" title="換算紀錄">🕐</button>
+      <span class="history-badge" id="historyBadge" style="display:none">0</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">換算 <span>— 點擊幣別標籤可替換</span></div>
+
+    <div class="input-row">
+      <div class="currency-badge-wrap" id="fromWrap">
+        <div class="currency-badge" id="fromBadge">TWD</div>
+        <div class="currency-name" id="fromName">新台幣</div>
+        <div class="swap-hint">點擊替換</div>
+      </div>
+      <input class="amount-input" id="fromInput" type="text" inputmode="decimal" placeholder="0">
+    </div>
+    <div class="quick-amounts" id="fromQuick"></div>
+
+    <div class="divider"><button class="swap-btn" id="swapBtn">⇅</button></div>
+
+    <div class="input-row">
+      <div class="currency-badge-wrap" id="toWrap">
+        <div class="currency-badge" id="toBadge">JPY</div>
+        <div class="currency-name" id="toName">日圓</div>
+        <div class="swap-hint">點擊替換</div>
+      </div>
+      <input class="amount-input" id="toInput" type="text" inputmode="decimal" placeholder="0" readonly style="color:var(--muted);cursor:default">
+    </div>
+
+    <div class="rate-row">
+      <span class="rate-info" id="rateInfo">載入匯率中…</span>
+      <span class="trend-badge trend-flat" id="trendBadge" style="display:none"></span>
+    </div>
+
+    <!-- Feature tabs -->
+    <div class="feat-tabs" id="featTabs">
+      <div class="feat-tab active" data-pane="calc">🧮 計算機</div>
+      <div class="feat-tab" data-pane="est" id="estTab">✦ 口袋估算</div>
+      <div class="feat-tab" data-pane="map">📍 找換匯</div>
+    </div>
+
+    <!-- Pane: Calculator -->
+    <div class="feat-pane active" id="pane-calc">
+      <div class="calc-display">
+        <div class="calc-expr" id="calcExpr"></div>
+        <div class="calc-val" id="calcVal">0</div>
+      </div>
+      <div class="calc-grid">
+        <button class="calc-btn del"   data-action="del">⌫</button>
+        <button class="calc-btn clear" data-action="clear">AC</button>
+        <button class="calc-btn op"    data-action="op" data-val="%">%</button>
+        <button class="calc-btn op"    data-action="op" data-val="÷">÷</button>
+        <button class="calc-btn" data-action="num" data-val="7">7</button>
+        <button class="calc-btn" data-action="num" data-val="8">8</button>
+        <button class="calc-btn" data-action="num" data-val="9">9</button>
+        <button class="calc-btn op" data-action="op" data-val="×">×</button>
+        <button class="calc-btn" data-action="num" data-val="4">4</button>
+        <button class="calc-btn" data-action="num" data-val="5">5</button>
+        <button class="calc-btn" data-action="num" data-val="6">6</button>
+        <button class="calc-btn op" data-action="op" data-val="−">−</button>
+        <button class="calc-btn" data-action="num" data-val="1">1</button>
+        <button class="calc-btn" data-action="num" data-val="2">2</button>
+        <button class="calc-btn" data-action="num" data-val="3">3</button>
+        <button class="calc-btn op" data-action="op" data-val="+">+</button>
+        <button class="calc-btn" data-action="num" data-val="0">0</button>
+        <button class="calc-btn" data-action="dot">.</button>
+        <button class="calc-btn use" data-action="use">帶入</button>
+        <button class="calc-btn eq"  data-action="eq">=</button>
+      </div>
+    </div>
+
+    <!-- Pane: Estimate -->
+    <div class="feat-pane" id="pane-est">
+      <div class="est-subtitle" id="estSubtitle"></div>
+      <div class="estimate-input-wrap">
+        <input class="est-num-input" id="estInput" type="text" inputmode="decimal" placeholder="輸入數字">
+        <span class="est-suffix" id="estSuffix">,000</span>
+        <span class="est-code" id="estCode">VND</span>
+      </div>
+      <div class="estimate-result-row">
+        <span class="estimate-result-label">≈ 台幣</span>
+        <span class="estimate-result-value" id="estResult">—</span>
+      </div>
+      <div class="estimate-note" id="estNote"></div>
+    </div>
+
+    <!-- Pane: Map -->
+    <div class="feat-pane" id="pane-map">
+      <div class="map-hint-box">
+        <div class="map-hint-title" id="mapHintTitle">📍 搜尋附近換匯地點</div>
+        <div class="map-hint-text" id="mapHintText">將開啟 Google Maps 搜尋你附近可兌換外幣的地點，包含銀行、換匯所等。</div>
+      </div>
+      <div class="map-tips">
+        <div class="map-tip"><span class="map-tip-icon">💡</span><span>建議出發前在台灣換好，通常匯率較優惠</span></div>
+        <div class="map-tip"><span class="map-tip-icon">🏦</span><span>機場換匯手續費較高，非急需盡量避免</span></div>
+        <div class="map-tip"><span class="map-tip-icon">💳</span><span>部分國家刷卡手續費低，可搭配現金使用</span></div>
+      </div>
+      <button class="map-btn" id="mapBtn">📍 開啟 Google Maps 搜尋</button>
+    </div>
+  </div>
+
+  <div class="update-info" id="updateInfo">—</div>
+</div>
+
+<!-- History overlay -->
+<div class="history-overlay" id="historyOverlay">
+  <div class="history-sheet">
+    <div class="history-header">
+      <span class="history-label">換算紀錄</span>
+      <button class="history-clear" id="historyClear">清除全部</button>
+    </div>
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<!-- Picker overlay -->
+<div class="picker-overlay" id="pickerOverlay">
+  <div class="picker-sheet">
+    <div class="picker-title" id="pickerTitle">選擇幣別</div>
+    <div class="picker-grid" id="pickerGrid"></div>
+  </div>
+</div>
+
+<script>
+const CURRENCIES=[
+  {code:'TWD',name:'新台幣',flag:'🇹🇼'},{code:'USD',name:'美金',flag:'🇺🇸'},
+  {code:'JPY',name:'日圓',flag:'🇯🇵'},{code:'KRW',name:'韓幣',flag:'🇰🇷'},
+  {code:'VND',name:'越南盾',flag:'🇻🇳'},{code:'THB',name:'泰銖',flag:'🇹🇭'},
+  {code:'MYR',name:'馬幣',flag:'🇲🇾'},{code:'SGD',name:'新幣',flag:'🇸🇬'},
+  {code:'PHP',name:'菲律賓披索',flag:'🇵🇭'},{code:'IDR',name:'印尼盾',flag:'🇮🇩'},
+  {code:'HKD',name:'港元',flag:'🇭🇰'},
+];
+const QUICK_AMOUNTS={
+  TWD:[100,500,1000,5000],USD:[1,5,10,50,100],JPY:[1000,5000,10000,50000],
+  KRW:[1000,5000,10000,50000],VND:[50000,100000,500000],THB:[100,500,1000,5000],
+  MYR:[10,50,100,500],SGD:[5,10,50,100],PHP:[100,500,1000,5000],
+  IDR:[10000,50000,100000,500000],HKD:[10,50,100,500],
+};
+const EST_CFG={
+  VND:{divisor:1000,suffix:',000',label:'K（千）'},
+  KRW:{divisor:1000,suffix:',000',label:'千（去三個零）'},
+  IDR:{divisor:10000,suffix:',0000',label:'萬（去四個零）'},
+};
+
+let pair={from:'TWD',to:'JPY'};
+let rates={},prevRates={};
+let ratesLoaded=false;
+let lastQABtn=null;
+let activePane='calc';
+
+const getCur=c=>CURRENCIES.find(x=>x.code===c);
+function fmtDisplay(n,code){
+  if(isNaN(n))return'';
+  if(['JPY','KRW','VND','IDR','PHP'].includes(code))return Math.round(n).toLocaleString();
+  return n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+}
+function parseNum(s){return parseFloat(String(s).replace(/,/g,''));}
+
+// ── Fetch ─────────────────────────────────────────────────────────────────────
+async function fetchRates(){
+  const stored=localStorage.getItem('cx_prev_rates');
+  if(stored)prevRates=JSON.parse(stored);
+  const sources=[
+    async()=>{const r=await fetch('https://latest.currency-api.pages.dev/v1/currencies/twd.json');if(!r.ok)throw 0;const d=await r.json();const m={};Object.keys(d.twd).forEach(k=>m[k.toUpperCase()]=d.twd[k]);return{rates:m,date:d.date};},
+    async()=>{const r=await fetch('https://open.er-api.com/v6/latest/TWD');if(!r.ok)throw 0;const d=await r.json();return{rates:d.rates,date:new Date(d.time_last_update_utc).toISOString().slice(0,10)};},
+    async()=>{const r=await fetch('https://api.frankfurter.app/latest?from=TWD');if(!r.ok)throw 0;const d=await r.json();return{rates:{...d.rates,TWD:1},date:d.date};},
+  ];
+  for(const src of sources){
+    try{
+      const{rates:r,date}=await src();
+      if(ratesLoaded)prevRates={...rates};
+      rates=r;rates.TWD=1;
+      if(!ratesLoaded)localStorage.setItem('cx_prev_rates',JSON.stringify(rates));
+      ratesLoaded=true;
+      document.getElementById('updateInfo').textContent=`匯率更新：${date}`;
+      updateRateInfo();recalc();updateEstPane();buildQuickAmounts();return;
+    }catch{continue;}
+  }
+  document.getElementById('rateInfo').textContent='匯率載入失敗，請重新整理';
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+function buildTabs(){
+  const wrap=document.getElementById('currencyTabs');
+  CURRENCIES.filter(c=>c.code!=='TWD').forEach(c=>{
+    const btn=document.createElement('button');
+    btn.className='currency-tab'+(c.code===pair.to?' active':'');
+    btn.innerHTML=`<span>${c.flag}</span>${c.code}`;
+    btn.dataset.code=c.code;
+    btn.addEventListener('click',()=>{if(pair.from===c.code)pair.from=pair.to;pair.to=c.code;syncUI();refreshTabs();});
+    wrap.appendChild(btn);
+  });
+}
+function refreshTabs(){document.querySelectorAll('.currency-tab').forEach(b=>b.classList.toggle('active',b.dataset.code===pair.to));}
+
+// ── Feature tab switching ─────────────────────────────────────────────────────
+document.querySelectorAll('.feat-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    const pane=tab.dataset.pane;
+    document.querySelectorAll('.feat-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.feat-pane').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('pane-'+pane).classList.add('active');
+    activePane=pane;
+  });
+});
+
+function updateEstTabVisibility(){
+  const code=getEstCode();
+  const estTab=document.getElementById('estTab');
+  if(code){
+    estTab.style.display='';
+  }else{
+    estTab.style.display='none';
+    // if currently on est pane, switch to calc
+    if(activePane==='est'){
+      document.querySelectorAll('.feat-tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.feat-pane').forEach(p=>p.classList.remove('active'));
+      document.querySelector('[data-pane="calc"]').classList.add('active');
+      document.getElementById('pane-calc').classList.add('active');
+      activePane='calc';
+    }
+  }
+}
+
+// ── Picker ────────────────────────────────────────────────────────────────────
+function openPicker(slot){
+  document.getElementById('pickerTitle').textContent=slot==='from'?'選擇上方幣別':'選擇下方幣別';
+  const grid=document.getElementById('pickerGrid');grid.innerHTML='';
+  CURRENCIES.forEach(c=>{
+    const div=document.createElement('div');
+    div.className='picker-item'+(pair[slot]===c.code?' active':'');
+    div.innerHTML=`<span class="pi-flag">${c.flag}</span><div><div class="pi-code">${c.code}</div><div class="pi-name">${c.name}</div></div>`;
+    div.addEventListener('click',()=>{
+      const other=slot==='from'?'to':'from';
+      if(pair[other]===c.code)pair[other]=pair[slot];
+      pair[slot]=c.code;closePicker();syncUI();refreshTabs();
+    });
+    grid.appendChild(div);
+  });
+  document.getElementById('pickerOverlay').classList.add('open');
+}
+function closePicker(){document.getElementById('pickerOverlay').classList.remove('open');}
+document.getElementById('pickerOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('pickerOverlay'))closePicker();});
+document.getElementById('fromWrap').addEventListener('click',()=>openPicker('from'));
+document.getElementById('toWrap').addEventListener('click',()=>openPicker('to'));
+
+// ── Quick amounts ─────────────────────────────────────────────────────────────
+function buildQuickAmounts(){
+  const wrap=document.getElementById('fromQuick');wrap.innerHTML='';
+  (QUICK_AMOUNTS[pair.from]||[]).forEach(amt=>{
+    const btn=document.createElement('button');
+    btn.className='qa-btn';btn.textContent=amt.toLocaleString();
+    btn.addEventListener('click',()=>{
+      const inp=document.getElementById('fromInput');
+      const cur=parseNum(inp.value)||0;
+      if(lastQABtn===btn){inp.value=fmtDisplay(cur+amt,pair.from);btn.classList.add('adding');setTimeout(()=>btn.classList.remove('adding'),400);}
+      else{inp.value=fmtDisplay(amt,pair.from);lastQABtn=btn;}
+      recalc();
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+// ── Sync ──────────────────────────────────────────────────────────────────────
+function syncUI(){
+  const f=getCur(pair.from),t=getCur(pair.to);
+  document.getElementById('fromBadge').textContent=f.code;
+  document.getElementById('fromName').textContent=f.name;
+  document.getElementById('toBadge').textContent=t.code;
+  document.getElementById('toName').textContent=t.name;
+  document.getElementById('fromInput').value='';
+  document.getElementById('toInput').value='';
+  lastQABtn=null;
+  updateRateInfo();updateEstPane();updateEstTabVisibility();buildQuickAmounts();recalc();
+  // update map hint
+  const foreign=pair.from==='TWD'?pair.to:pair.from;
+  const c=getCur(foreign);
+  document.getElementById('mapHintTitle').textContent=`📍 搜尋附近 ${c.name} 兌換地點`;
+  document.getElementById('mapHintText').textContent=`將開啟 Google Maps 搜尋你附近可兌換 ${c.name}（${c.code}）的地點，包含銀行、外幣兌換所等服務。`;
+}
+
+function updateRateInfo(){
+  if(!ratesLoaded)return;
+  const rf=rates[pair.from]||1,rt=rates[pair.to]||1,r=rt/rf;
+  const dec=['JPY','KRW','VND','IDR','PHP'].includes(pair.to)?2:4;
+  document.getElementById('rateInfo').textContent=`1 ${pair.from} ≈ ${r.toFixed(dec)} ${pair.to}`;
+  const badge=document.getElementById('trendBadge');
+  if(prevRates[pair.from]&&prevRates[pair.to]){
+    const prev=(prevRates[pair.to]||1)/(prevRates[pair.from]||1),diff=((r-prev)/prev)*100;
+    if(Math.abs(diff)<0.01){badge.textContent='→ 持平';badge.className='trend-badge trend-flat';}
+    else if(diff>0){badge.textContent=`↑ +${diff.toFixed(2)}%`;badge.className='trend-badge trend-up';}
+    else{badge.textContent=`↓ ${diff.toFixed(2)}%`;badge.className='trend-badge trend-down';}
+    badge.style.display='';
+  }else{badge.style.display='none';}
+}
+
+function recalc(){
+  if(!ratesLoaded)return;
+  const v=parseNum(document.getElementById('fromInput').value);
+  const toEl=document.getElementById('toInput');
+  if(isNaN(v)||!document.getElementById('fromInput').value.trim()){toEl.value='';return;}
+  const result=v*(rates[pair.to]||1)/(rates[pair.from]||1);
+  toEl.value=fmtDisplay(result,pair.to);
+  clearTimeout(recalc._t);recalc._t=setTimeout(()=>saveHistory(v,result),800);
+}
+document.getElementById('fromInput').addEventListener('input',()=>{lastQABtn=null;recalc();});
+document.getElementById('swapBtn').addEventListener('click',()=>{[pair.from,pair.to]=[pair.to,pair.from];syncUI();refreshTabs();});
+
+// ── Calculator ────────────────────────────────────────────────────────────────
+let cs={expr:'',current:'0',hasResult:false};
+function calcDisplay(){
+  document.getElementById('calcExpr').textContent=cs.expr;
+  document.getElementById('calcVal').textContent=cs.current;
+}
+document.querySelectorAll('.calc-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const action=btn.dataset.action,val=btn.dataset.val;
+    if(action==='clear'){cs.expr='';cs.current='0';cs.hasResult=false;}
+    else if(action==='del'){
+      if(cs.hasResult){cs.current='0';cs.hasResult=false;}
+      else{cs.current=cs.current.length>1?cs.current.slice(0,-1):'0';}
+    }
+    else if(action==='num'){
+      if(cs.hasResult){cs.current=val;cs.hasResult=false;}
+      else{cs.current=cs.current==='0'?val:cs.current+val;}
+    }
+    else if(action==='dot'){
+      if(cs.hasResult){cs.current='0.';cs.hasResult=false;}
+      else if(!cs.current.includes('.'))cs.current+='.';
+    }
+    else if(action==='op'){cs.expr=cs.current+' '+val+' ';cs.current='0';cs.hasResult=false;}
+    else if(action==='eq'){
+      if(!cs.expr)return;
+      try{
+        const clean=(cs.expr+cs.current).replace(/÷/g,'/').replace(/×/g,'*').replace(/−/g,'-');
+        const result=Function('"use strict";return('+clean+')')();
+        cs.expr=cs.expr+cs.current+' =';cs.current=parseFloat(result.toFixed(8)).toString();cs.hasResult=true;
+      }catch{cs.current='錯誤';cs.expr='';}
+    }
+    else if(action==='use'){
+      const v=parseFloat(cs.current);
+      if(!isNaN(v)){document.getElementById('fromInput').value=fmtDisplay(v,pair.from);recalc();}
+    }
+    calcDisplay();
+  });
+});
+
+// ── Estimate pane ─────────────────────────────────────────────────────────────
+function getEstCode(){if(EST_CFG[pair.from])return pair.from;if(EST_CFG[pair.to])return pair.to;return null;}
+function updateEstPane(){
+  const code=getEstCode();if(!code)return;
+  const cfg=EST_CFG[code];
+  document.getElementById('estCode').textContent=code;
+  document.getElementById('estSuffix').textContent=cfg.suffix;
+  document.getElementById('estSubtitle').textContent=`輸入 ${cfg.label} 前的數字，快速換算台幣`;
+  document.getElementById('estInput').value='';
+  document.getElementById('estResult').textContent='—';
+  if(ratesLoaded){
+    const unitVal=cfg.divisor/(rates[code]||1);
+    document.getElementById('estNote').textContent=`即時匯率：${cfg.divisor.toLocaleString()} ${code} ≈ ${unitVal.toFixed(2)} TWD\n（即每${cfg.label}約 ${unitVal.toFixed(2)} 台幣）`;
+  }
+}
+document.getElementById('estInput').addEventListener('input',()=>{
+  const code=getEstCode();if(!code||!ratesLoaded)return;
+  const units=parseNum(document.getElementById('estInput').value);
+  if(isNaN(units)||units===0){document.getElementById('estResult').textContent='—';return;}
+  document.getElementById('estResult').textContent=fmtDisplay(units*EST_CFG[code].divisor/(rates[code]||1),'TWD')+' TWD';
+});
+
+// ── Map ───────────────────────────────────────────────────────────────────────
+document.getElementById('mapBtn').addEventListener('click',()=>{
+  const code=pair.from==='TWD'?pair.to:pair.from;
+  const c=getCur(code);
+  window.open(`https://www.google.com/maps/search/${encodeURIComponent(c.name+' 外幣兌換 currency exchange')}`,'_blank');
+});
+
+// ── History ───────────────────────────────────────────────────────────────────
+document.getElementById('historyIconBtn').addEventListener('click',()=>document.getElementById('historyOverlay').classList.add('open'));
+document.getElementById('historyOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('historyOverlay'))document.getElementById('historyOverlay').classList.remove('open');});
+function loadHistory(){return JSON.parse(localStorage.getItem('cx_history')||'[]');}
+function saveHistoryData(arr){localStorage.setItem('cx_history',JSON.stringify(arr));}
+function saveHistory(fromAmt,toAmt){
+  if(!fromAmt||isNaN(fromAmt)||fromAmt<=0)return;
+  const hist=loadHistory();
+  const entry={from:pair.from,to:pair.to,fromAmt,toAmt,time:Date.now()};
+  if(hist.length&&hist[0].from===entry.from&&hist[0].to===entry.to&&Math.abs(hist[0].fromAmt-entry.fromAmt)<0.01)return;
+  hist.unshift(entry);if(hist.length>10)hist.pop();
+  saveHistoryData(hist);renderHistory();
+  const badge=document.getElementById('historyBadge');
+  badge.textContent=hist.length;badge.style.display=hist.length?'':'none';
+}
+function renderHistory(){
+  const list=document.getElementById('historyList');
+  const hist=loadHistory();
+  const badge=document.getElementById('historyBadge');
+  badge.textContent=hist.length;badge.style.display=hist.length?'':'none';
+  if(!hist.length){list.innerHTML='<div class="history-empty">尚無換算紀錄</div>';return;}
+  list.innerHTML=hist.map((h,i)=>{
+    const t=new Date(h.time);
+    const ts=`${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+    const fc=getCur(h.from),tc=getCur(h.to);
+    return`<div class="history-item" data-idx="${i}">
+      <div class="history-left">
+        <span class="history-pair">${fc?.flag||''} ${h.from} → ${tc?.flag||''} ${h.to}</span>
+        <span class="history-from">${fmtDisplay(h.fromAmt,h.from)} ${h.from}</span>
+      </div>
+      <div class="history-right">
+        <div class="history-to">${fmtDisplay(h.toAmt,h.to)} ${h.to}</div>
+        <div class="history-time">${ts}</div>
+      </div>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.history-item').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const h=hist[+el.dataset.idx];
+      pair.from=h.from;pair.to=h.to;syncUI();refreshTabs();
+      document.getElementById('historyOverlay').classList.remove('open');
+      setTimeout(()=>{document.getElementById('fromInput').value=fmtDisplay(h.fromAmt,h.from);recalc();},50);
+    });
+  });
+}
+document.getElementById('historyClear').addEventListener('click',()=>{
+  saveHistoryData([]);renderHistory();
+  document.getElementById('historyOverlay').classList.remove('open');
+});
+
+// ── PWA ───────────────────────────────────────────────────────────────────────
+const manifest={name:'換匯計算機',short_name:'Currency',start_url:'.',display:'standalone',background_color:'#EEF3F7',theme_color:'#4E7A92',icons:[{src:'https://duk.tw/sdiLb7.png',sizes:'192x192',type:'image/png'},{src:'https://duk.tw/sdiLb7.png',sizes:'512x512',type:'image/png'}]};
+const blob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
+document.getElementById('pwaManifest').href=URL.createObjectURL(blob);
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+buildTabs();syncUI();renderHistory();calcDisplay();fetchRates();
+</script>
+</body>
+</html>
